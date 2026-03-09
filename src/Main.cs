@@ -42,6 +42,27 @@ public sealed class Main : IPlugin, ISettingProvider
         }
         var dataPath = Path.Combine(dataDir, "keywords.json");
 
+        // (B-1) Data Migration: Old path (AliasFlow) -> New path (Flow.Launcher.Plugin.AliasFlow)
+        try
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var oldDataDir = Path.Combine(appData, "FlowLauncher", "Settings", "Plugins", "AliasFlow");
+            var oldDataPath = Path.Combine(oldDataDir, "keywords.json");
+
+            if (File.Exists(oldDataPath) && !File.Exists(dataPath))
+            {
+                if (!Directory.Exists(dataDir))
+                {
+                    Directory.CreateDirectory(dataDir);
+                }
+                File.Copy(oldDataPath, dataPath, overwrite: false);
+            }
+        }
+        catch (Exception ex)
+        {
+            NotifyError("Alias Flow", $"Data migration failed: {ex.Message}");
+        }
+
         // (C) 최초 1회: 패키징된 기본 keywords.json이 있으면 사용자 데이터 경로로 복사
         try
         {
